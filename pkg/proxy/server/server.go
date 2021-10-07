@@ -285,9 +285,7 @@ func (s *Server) OnPodAdd(pod *v1.Pod) {
 // OnPodUpdate ...
 func (s *Server) OnPodUpdate(oldPod, pod *v1.Pod) {
 	klog.V(4).Infof("OnPodUpdate")
-	if s.podChanges.Update(oldPod, pod) && s.podSynced {
-		s.Sync()
-	}
+	s.podChanges.Update(oldPod, pod)
 	s.syncServiceForwarding()
 }
 
@@ -344,7 +342,6 @@ func (s *Server) OnEndpointSliceSynced() {
 	s.mu.Unlock()
 
 	s.syncServiceForwarding()
-
 }
 
 func (s *Server) OnServiceAdd(service *v1.Service) {
@@ -477,7 +474,7 @@ func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.
 
 	for _, status := range podInfo.NetworkStatus {
 		for svcPortName, svcInfo := range s.serviceMap {
-			if status.Name == svcInfo.TargetNetwork {
+			if status.Name == svcInfo.TargetNetwork && svcInfo.ClusterIP != "None" {
 				_ = iptableBuffer.generateServicePortForwardingRules(s, &svcPortName, &svcInfo, &status)
 			}
 		}
