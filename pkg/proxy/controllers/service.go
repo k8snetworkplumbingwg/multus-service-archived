@@ -57,7 +57,7 @@ type ServiceConfig struct {
 	eventHandlers []ServiceHandler
 }
 
-// ServiceConfig ...
+// NewServiceConfig ...
 func NewServiceConfig(serviceInformer coreinformers.ServiceInformer, resyncPeriod time.Duration) *ServiceConfig {
 	result := &ServiceConfig{
 		listerSynced: serviceInformer.Informer().HasSynced,

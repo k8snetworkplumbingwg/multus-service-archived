@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -100,6 +99,7 @@ type Server struct {
 	syncRunner *async.BoundedFrequencyRunner
 }
 
+// LabelServiceProxyName specifies Kubernetes label for service proxy
 const LabelServiceProxyName = "service.kubernetes.io/service-proxy-name"
 
 // Run ...
@@ -316,24 +316,28 @@ func (s *Server) OnPodSynced() {
 	s.syncServiceForwarding()
 }
 
+// OnEndpointSliceAdd ...
 func (s *Server) OnEndpointSliceAdd(endpointSlice *discovery.EndpointSlice) {
 	klog.V(4).Infof("OnEndpointSliceAdd")
 	s.endpointSliceCache.EndpointSliceUpdate(endpointSlice, false)
 	s.syncServiceForwarding()
 }
 
+// OnEndpointSliceUpdate ...
 func (s *Server) OnEndpointSliceUpdate(oldEndpointSlice, endpointSlice *discovery.EndpointSlice) {
 	klog.V(4).Infof("OnEndpointSliceUpdate")
 	s.endpointSliceCache.EndpointSliceUpdate(endpointSlice, false)
 	s.syncServiceForwarding()
 }
 
+// OnEndpointSliceDelete ...
 func (s *Server) OnEndpointSliceDelete(endpointSlice *discovery.EndpointSlice) {
 	klog.V(4).Infof("OnEndpointSliceDelete")
 	s.endpointSliceCache.EndpointSliceUpdate(endpointSlice, true)
 	s.syncServiceForwarding()
 }
 
+// OnEndpointSliceSynced ...
 func (s *Server) OnEndpointSliceSynced() {
 	klog.Infof("OnEndpointSliceSynced")
 	s.mu.Lock()
@@ -344,6 +348,7 @@ func (s *Server) OnEndpointSliceSynced() {
 	s.syncServiceForwarding()
 }
 
+// OnServiceAdd ...
 func (s *Server) OnServiceAdd(service *v1.Service) {
 	klog.V(4).Infof("OnEndpointSliceAdd")
 
@@ -351,18 +356,21 @@ func (s *Server) OnServiceAdd(service *v1.Service) {
 	s.syncServiceForwarding()
 }
 
+// OnServiceUpdate ...
 func (s *Server) OnServiceUpdate(oldService, service *v1.Service) {
 	klog.V(4).Infof("OnEndpointSliceUpdate")
 	s.serviceChanges.Update(oldService, service)
 	s.syncServiceForwarding()
 }
 
+// OnServiceDelete ...
 func (s *Server) OnServiceDelete(service *v1.Service) {
 	klog.V(4).Infof("OnEndpointSliceDelete")
 	s.serviceChanges.Update(service, nil)
 	s.syncServiceForwarding()
 }
 
+// OnServiceSynced ...
 func (s *Server) OnServiceSynced() {
 	klog.Infof("OnServiceSynced")
 	s.mu.Lock()
@@ -371,20 +379,6 @@ func (s *Server) OnServiceSynced() {
 	s.mu.Unlock()
 
 	s.syncServiceForwarding()
-}
-
-var mem runtime.MemStats
-var count uint
-
-func PrintMemory() {
-	runtime.ReadMemStats(&mem)
-	klog.Infof("memAlloc:%v memTotalAlloc:%v memHeapAlloc:%v memHeapSys:%v", mem.Alloc, mem.TotalAlloc, mem.HeapAlloc, mem.HeapSys)
-	count++
-	if count%10 == 0 {
-		klog.Infof("GC!!")
-		runtime.GC()
-		PrintMemory()
-	}
 }
 
 func (s *Server) syncServiceForwarding() {

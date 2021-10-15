@@ -1,0 +1,18 @@
+# Binary output dir
+bin/
+
+# binary at the top
+/multus-proxy
+/multus-service-controller
+
+# GOPATH created by the build script
+gopath/
+
+# Editor paths
+.swp*
+.swo*
+.idea*
+
+# Test outputs
+*.out
+*.test

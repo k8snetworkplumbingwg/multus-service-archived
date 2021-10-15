@@ -226,7 +226,7 @@ func (ipt *iptableBuffer) generateServiceEndpointSliceForwardingRules(s *Server,
 			"-m", "comment", "--comment", fmt.Sprintf("\"%s\"", svcInfo.Name),
 			"-m", "tcp", "-j", "DNAT", "--to-destination",
 			fmt.Sprintf("%s", endpoint.String()))
-		totalEndpointSlices -= 1
+		totalEndpointSlices--
 	}
 	return nil
 }

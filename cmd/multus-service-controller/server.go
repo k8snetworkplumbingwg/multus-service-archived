@@ -30,6 +30,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
+// NewServer ...
 func NewServer(o *Options) (*endpointslice.Controller, error) {
 	var kubeConfig *rest.Config
 	var err error

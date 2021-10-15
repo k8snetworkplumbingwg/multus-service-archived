@@ -62,7 +62,7 @@ type EndpointSliceConfig struct {
 	eventHandlers []EndpointSliceHandler
 }
 
-// EndpointSliceConfig ...
+// NewEndpointSliceConfig ...
 func NewEndpointSliceConfig(endpointSliceInformer discinformers.EndpointSliceInformer, resyncPeriod time.Duration) *EndpointSliceConfig {
 	result := &EndpointSliceConfig{
 		listerSynced: endpointSliceInformer.Informer().HasSynced,
@@ -394,7 +394,7 @@ func standardEndpointInfo(ep *BaseEndpointInfo) Endpoint {
 	return ep
 }
 
-// updatePending updates a pending slice in the cache.
+// EndpointSliceUpdate updates a pending slice in the cache.
 func (cache *EndpointSliceCache) EndpointSliceUpdate(endpointSlice *discovery.EndpointSlice, remove bool) bool {
 	serviceKey, sliceKey, err := endpointSliceCacheKeys(endpointSlice)
 	if err != nil {
