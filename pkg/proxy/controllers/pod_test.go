@@ -225,7 +225,7 @@ var _ = Describe("pod controller", func() {
 		Expect(ok).To(BeTrue())
 		Expect(pod1.Name).To(Equal("testpod1"))
 		Expect(pod1.Namespace).To(Equal("testns1"))
-		Expect(len(pod1.Interfaces)).To(Equal(1))
+		Expect(len(pod1.Interfaces)).To(Equal(2))
 	})
 
 	It("Add pod with net-attach annotation and verify", func() {
@@ -251,7 +251,7 @@ var _ = Describe("pod controller", func() {
 		Expect(ok).To(BeTrue())
 		Expect(pod2.Name).To(Equal("testpod1"))
 		Expect(pod2.Namespace).To(Equal("testns1"))
-		Expect(len(pod2.Interfaces)).To(Equal(1))
+		Expect(len(pod2.Interfaces)).To(Equal(2))
 	})
 
 })

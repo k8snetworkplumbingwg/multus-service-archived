@@ -121,7 +121,12 @@ func getEndpointPorts(service *corev1.Service, pod *corev1.Pod) []discovery.Endp
 func getEndpointAddresses(pod *corev1.Pod, service *corev1.Service, addressType discovery.AddressType) []string {
 	addresses := []string{}
 
-	statuses, _ := netdefutils.GetNetworkStatus(pod)
+	statuses, err := netdefutils.GetNetworkStatus(pod)
+	if err != nil {
+		klog.V(4).Infof("Failed to get status: %v", err)
+		return nil
+	}
+
 	serviceNetwork, ok := service.Annotations[multusServiceNetworkAnnotation]
 	if !ok {
 		return nil
@@ -164,7 +169,7 @@ func newEndpointSlice(service *corev1.Service, endpointMeta *endpointMeta) *disc
 // getEndpointSlicePrefix returns a suitable prefix for an EndpointSlice name.
 func getEndpointSlicePrefix(serviceName string) string {
 	// use the dash (if the name isn't too long) to make the pod name a bit prettier
-	prefix := fmt.Sprintf("%s-multus-", serviceName) //XXX (might be better prefix?)
+	prefix := fmt.Sprintf("%s-multus-", serviceName)
 	if len(validation.ValidateEndpointSliceName(prefix, true)) != 0 {
 		prefix = serviceName
 	}
