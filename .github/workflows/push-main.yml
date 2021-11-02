@@ -1,12 +1,12 @@
-name: push-master
+name: push-main
 on:
   push:
     branches:
-      - master
+      - main
 env:
   image-push-owner: 'k8snetworkplumbingwg'
 jobs:
-  push-master:
+  push-main:
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
