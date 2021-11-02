@@ -23,7 +23,8 @@ Other service related features is to be discussed in [Kubernetes Network Plumbin
 
 ## Container Images
 
-TBD 
+Available in [Packages](https://github.com/k8snetworkplumbingwg/multus-service/pkgs/container/multus-service).
+Currently amd64 only.
 
 ## How to Deploy
 
