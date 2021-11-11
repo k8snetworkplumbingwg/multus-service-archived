@@ -53,17 +53,14 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 	k8s.io/api v0.21.1
-	k8s.io/apimachinery v0.21.1
+	k8s.io/apimachinery v0.22.3
 	k8s.io/apiserver v0.21.1
-	k8s.io/client-go v0.21.1
-	k8s.io/cloud-provider v0.21.1 // indirect
+	k8s.io/client-go v1.5.2
 	k8s.io/component-base v0.21.1
 	k8s.io/component-helpers v0.21.1 // indirect
-	k8s.io/controller-manager v0.21.1 // indirect
 	k8s.io/cri-api v0.0.0
 	k8s.io/klog v0.0.0-20181102134211-b9b56d5dfc92
 	k8s.io/klog/v2 v2.9.0
-	k8s.io/kube-controller-manager v0.0.0
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // indirect
 	k8s.io/kubernetes v1.21.1
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
@@ -76,6 +73,7 @@ require (
 	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/google/uuid v1.1.2 // indirect
 	github.com/hpcloud/tail v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect

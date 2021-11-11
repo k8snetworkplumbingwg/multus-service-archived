@@ -17,10 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	"os"
+	"time"
 
 	"github.com/spf13/pflag"
 
+	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/klog/v2"
 	utilnode "k8s.io/kubernetes/pkg/util/node"
 )
@@ -34,6 +39,17 @@ type Options struct {
 	hostnameOverride string
 	// errCh is the channel that errors will be sent
 	errCh chan error
+
+	// enableLeaderElection is optional
+	enableLeaderElection	bool
+	// leaseNamespace is the namespace for lease object of leaderelection
+	leaseNamespace string
+	// leaseDuration...
+	leaseDuration	int64
+	// renewDeadline
+	renewDeadline int64
+	// retryPeriod
+	retryPeriod int64
 }
 
 // AddFlags adds command line flags into command
@@ -43,6 +59,11 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.Kubeconfig, "kubeconfig", o.Kubeconfig, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
 	fs.StringVar(&o.master, "master", o.master, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	fs.StringVar(&o.hostnameOverride, "hostname-override", o.hostnameOverride, "If non-empty, will use this string as identification instead of the actual hostname.")
+	fs.BoolVar(&o.enableLeaderElection, "leaderelection", true, "Enable eladerelection.")
+	fs.StringVar(&o.leaseNamespace, "lease-namespace", "kube-system", "Namespace for lease object")
+	fs.Int64Var(&o.leaseDuration, "lease-duration", int64(15 * time.Second), "Lease duration of leaderelection.")
+	fs.Int64Var(&o.renewDeadline, "renew-deadline", int64(10 * time.Second), "Renew Deadline of leaderelection.")
+	fs.Int64Var(&o.retryPeriod, "retry-period", int64(2 * time.Second), "Retry period of leaderelection.")
 	fs.AddGoFlagSet(flag.CommandLine)
 }
 
@@ -55,7 +76,7 @@ func (o *Options) Validate() error {
 func (o *Options) Run() error {
 	defer close(o.errCh)
 
-	server, err := NewServer(o)
+	server, client, err := NewServer(o)
 	if err != nil {
 		return err
 	}
@@ -66,23 +87,58 @@ func (o *Options) Run() error {
 	}
 	klog.Infof("hostname: %v", hostname)
 
+	ctx := context.Background()
 	stopCh := make(chan struct{})
-	go func() {
-		server.Run(5, stopCh)
-		//o.errCh <- err
-	}()
+	waitingForLeader := make(chan struct{})
 
+	if o.enableLeaderElection {
+		leaderElection, err := makeLeaderElectionConfig(o, client)
+		if err != nil {
+			return err
+		}
+
+		leaderElection.Callbacks = leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(ctx context.Context) {
+				close(waitingForLeader)
+				server.Run(5, stopCh)
+			},
+			OnStoppedLeading: func() {
+				select {
+				case <-ctx.Done():
+					// We were asked to terminate Exit 0.
+					klog.Info("Requested to terminate. Exiting.")
+					os.Exit(0)
+				default:
+					// We lost the lock.
+					klog.Exitf("leaderelection lost")
+				}
+			},
+		}
+
+		leaderElector, eErr := leaderelection.NewLeaderElector(*leaderElection)
+		if eErr != nil {
+			return fmt.Errorf("cannot create leader elector: %v", eErr)
+		}
+
+		leaderElector.Run(ctx)
+		return fmt.Errorf("lost lease")
+	}
+
+	server.Run(5, stopCh)
+	/*
 	for {
 		err := <-o.errCh
 		if err != nil {
 			return err
 		}
 	}
+	*/
+	return nil
 }
 
 // NewOptions initializes Options
 func NewOptions() *Options {
 	return &Options{
-		errCh: make(chan error),
+	//	errCh: make(chan error),
 	}
 }
