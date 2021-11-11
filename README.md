@@ -28,7 +28,7 @@ Currently amd64 only.
 
 ## How to Deploy
 
-TBD
+Sample deployment is in [deploy.yml](https://github.com/k8snetworkplumbingwg/multus-service/blob/main/deploy.yml).
 
 
 ## TODO
