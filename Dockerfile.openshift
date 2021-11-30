@@ -1,0 +1,21 @@
+# This dockerfile is specific to building Multus for OpenShift
+FROM registry.ci.openshift.org/ocp/builder:rhel-8-golang-1.16-openshift-4.10 AS build
+
+# Add everything
+ADD . /usr/src/multus-service
+
+RUN cd /usr/src/multus-service && \
+    go build ./cmd/multus-proxy/ && \
+    go build ./cmd/multus-service-controller/
+
+FROM registry.ci.openshift.org/ocp/4.10:base
+RUN dnf install -y iptables
+COPY --from=build /usr/src/multus-service/multus-proxy /usr/bin
+COPY --from=build /usr/src/multus-service/multus-service-controller /usr/bin
+
+WORKDIR /usr/bin
+
+LABEL io.k8s.display-name="Multus NetworkPolicy" \
+      io.k8s.description="This is a component of OpenShift Container Platform and provides NetworkPolicy objects for secondary interfaces created with Multus CNI" \
+      io.openshift.tags="openshift" \
+      maintainer="Doug Smith <dosmith@redhat.com>"
