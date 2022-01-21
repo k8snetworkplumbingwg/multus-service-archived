@@ -145,6 +145,7 @@ func (s *Server) Run(hostname string) error {
 	informerFactory.Start(wait.NeverStop)
 
 	s.birthCry()
+	s.SyncLoop()
 	return nil
 }
 
@@ -350,7 +351,7 @@ func (s *Server) OnEndpointSliceSynced() {
 
 // OnServiceAdd ...
 func (s *Server) OnServiceAdd(service *v1.Service) {
-	klog.V(4).Infof("OnEndpointSliceAdd")
+	klog.V(4).Infof("OnServiceAdd")
 
 	s.serviceChanges.Update(nil, service)
 	s.syncServiceForwarding()
@@ -358,14 +359,14 @@ func (s *Server) OnServiceAdd(service *v1.Service) {
 
 // OnServiceUpdate ...
 func (s *Server) OnServiceUpdate(oldService, service *v1.Service) {
-	klog.V(4).Infof("OnEndpointSliceUpdate")
+	klog.V(4).Infof("OnServiceUpdate")
 	s.serviceChanges.Update(oldService, service)
 	s.syncServiceForwarding()
 }
 
 // OnServiceDelete ...
 func (s *Server) OnServiceDelete(service *v1.Service) {
-	klog.V(4).Infof("OnEndpointSliceDelete")
+	klog.V(4).Infof("OnServiceDelete")
 	s.serviceChanges.Update(service, nil)
 	s.syncServiceForwarding()
 }

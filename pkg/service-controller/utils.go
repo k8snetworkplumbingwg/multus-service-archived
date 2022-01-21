@@ -149,6 +149,8 @@ func getEndpointAddresses(pod *corev1.Pod, service *corev1.Service, addressType 
 func newEndpointSlice(service *corev1.Service, endpointMeta *endpointMeta) *discovery.EndpointSlice {
 	gvk := schema.GroupVersionKind{Version: "v1", Kind: "Service"}
 	ownerRef := metav1.NewControllerRef(service, gvk)
+	blockOwnerDeletion := false
+	ownerRef.BlockOwnerDeletion = &blockOwnerDeletion
 	epSlice := &discovery.EndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:          map[string]string{},
