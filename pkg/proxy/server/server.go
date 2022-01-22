@@ -37,6 +37,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
@@ -114,7 +115,12 @@ func (s *Server) Run(hostname string) error {
 	s.serviceLister = informerFactory.Core().V1().Services().Lister()
 	s.endpointSliceLister = informerFactory.Discovery().V1().EndpointSlices().Lister()
 
-	podConfig := controllers.NewPodConfig(informerFactory.Core().V1().Pods(), s.ConfigSyncPeriod)
+	podInformerFactory := informers.NewSharedInformerFactoryWithOptions(s.Client, s.ConfigSyncPeriod,
+		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+			options.FieldSelector = fields.OneTermEqualSelector("spec.nodeName", hostname).String()
+		}))
+
+	podConfig := controllers.NewPodConfig(podInformerFactory.Core().V1().Pods(), s.ConfigSyncPeriod)
 	podConfig.RegisterEventHandler(s)
 	go podConfig.Run(wait.NeverStop)
 
@@ -143,6 +149,7 @@ func (s *Server) Run(hostname string) error {
 
 	epInformerFactory.Start(wait.NeverStop)
 	informerFactory.Start(wait.NeverStop)
+	podInformerFactory.Start(wait.NeverStop)
 
 	s.birthCry()
 	s.SyncLoop()
