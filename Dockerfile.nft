@@ -11,7 +11,7 @@ RUN cd /usr/src/multus-service && \
 FROM fedora:35
 LABEL org.opencontainers.image.source https://github.com/k8snetworkplumbingwg/multus-service
 RUN dnf install -y iptables-utils iptables-legacy iptables-nft
-RUN alternatives --set iptables /usr/sbin/iptables-legacy
+RUN alternatives --set iptables /usr/sbin/iptables-nft
 COPY --from=build /usr/src/multus-service/multus-proxy /usr/bin
 COPY --from=build /usr/src/multus-service/multus-service-controller /usr/bin
 WORKDIR /usr/bin

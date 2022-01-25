@@ -41,13 +41,29 @@ jobs:
             ghcr.io/${{ github.repository }}:stable-amd64
             ${{ steps.docker_meta.outputs.tags }}-amd64
 
+      - name: Push to GitHub Container Registry (nft image)
+        if: github.repository_owner == 'k8snetworkplumbingwg'
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:stable-nft-amd64
+            ${{ steps.docker_meta.outputs.tags }}-nft-amd64
+          file: Dockerfile.nft
+
       - name: Create manifest for multi-arch images
         if: github.repository_owner == 'k8snetworkplumbingwg'
         run: |
           docker manifest create ${{ env.REPOSITORY }}:stable ${{ env.REPOSITORY }}:stable-amd64
           docker manifest annotate ${{ env.REPOSITORY }}:stable ${{ env.REPOSITORY }}:stable-amd64 --arch amd64
           docker manifest push ${{ env.REPOSITORY }}:stable
+          docker manifest create ${{ env.REPOSITORY }}:stable-nft ${{ env.REPOSITORY }}:stable-nft-amd64
+          docker manifest annotate ${{ env.REPOSITORY }}:stable-nft ${{ env.REPOSITORY }}:stable-nft-amd64 --arch amd64
+          docker manifest push ${{ env.REPOSITORY }}:stable-nft
           docker manifest create ${{ steps.docker_meta.outputs.tags }} ${{ steps.docker_meta.outputs.tags }}-amd64
           docker manifest annotate ${{ steps.docker_meta.outputs.tags }} ${{ steps.docker_meta.outputs.tags }}-amd64 --arch amd64
           docker manifest push ${{ steps.docker_meta.outputs.tags }}
+          docker manifest create ${{ steps.docker_meta.outputs.tags }}-nft ${{ steps.docker_meta.outputs.tags }}-nft-amd64
+          docker manifest annotate ${{ steps.docker_meta.outputs.tags }}-nft ${{ steps.docker_meta.outputs.tags }}-nft-amd64 --arch amd64
+          docker manifest push ${{ steps.docker_meta.outputs.tags }}-nft
 

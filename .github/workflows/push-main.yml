@@ -35,6 +35,16 @@ jobs:
             ghcr.io/${{ github.repository }}:latest-amd64
             ghcr.io/${{ github.repository }}:snapshot-amd64
 
+      - name: Push to GitHub Container Registry (nft image)
+        if: github.repository_owner == 'k8snetworkplumbingwg'
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest-nft-amd64
+            ghcr.io/${{ github.repository }}:snapshot-nft-amd64
+          file: Dockerfile.nft
+
       - name: Create manifest for multi-arch images
         if: github.repository_owner == 'k8snetworkplumbingwg'
         run: |
@@ -44,4 +54,10 @@ jobs:
           docker manifest create ${REPOSITORY}:latest ${REPOSITORY}:latest-amd64
           docker manifest annotate ${REPOSITORY}:latest ${REPOSITORY}:latest-amd64 --arch amd64
           docker manifest push ${REPOSITORY}:latest
+          docker manifest create ${REPOSITORY}:snapshot-nft ${REPOSITORY}:snapshot-nft-amd64
+          docker manifest annotate ${REPOSITORY}:snapshot-nft ${REPOSITORY}:snapshot-nft-amd64 --arch amd64
+          docker manifest push ${REPOSITORY}:snapshot-nft
+          docker manifest create ${REPOSITORY}:latest-nft ${REPOSITORY}:latest-nft-amd64
+          docker manifest annotate ${REPOSITORY}:latest-nft ${REPOSITORY}:latest-nft-amd64 --arch amd64
+          docker manifest push ${REPOSITORY}:latest-nft
 
