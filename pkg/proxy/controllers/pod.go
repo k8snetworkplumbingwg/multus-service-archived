@@ -127,7 +127,7 @@ func (c *PodConfig) Run(stopCh <-chan struct{}) {
 	}
 
 	for i := range c.eventHandlers {
-		klog.V(9).Infof("Calling handler.OnPodSynced()")
+		klog.V(4).Infof("Calling handler.OnPodSynced()")
 		c.eventHandlers[i].OnPodSynced()
 	}
 }
@@ -140,7 +140,7 @@ func (c *PodConfig) handleAddPod(obj interface{}) {
 	}
 
 	for i := range c.eventHandlers {
-		klog.V(9).Infof("Calling handler.OnPodAdd")
+		klog.V(4).Infof("Calling handler.OnPodAdd")
 		c.eventHandlers[i].OnPodAdd(pod)
 	}
 }
@@ -157,7 +157,7 @@ func (c *PodConfig) handleUpdatePod(oldObj, newObj interface{}) {
 		return
 	}
 	for i := range c.eventHandlers {
-		klog.V(9).Infof("Calling handler.OnPodUpdate")
+		klog.V(4).Infof("Calling handler.OnPodUpdate")
 		c.eventHandlers[i].OnPodUpdate(oldPod, pod)
 	}
 }
@@ -175,7 +175,7 @@ func (c *PodConfig) handleDeletePod(obj interface{}) {
 		}
 	}
 	for i := range c.eventHandlers {
-		klog.V(9).Infof("Calling handler.OnPodDelete")
+		klog.V(4).Infof("Calling handler.OnPodDelete")
 		c.eventHandlers[i].OnPodDelete(pod)
 	}
 }
@@ -334,7 +334,7 @@ func (pct *PodChangeTracker) newPodInfo(pod *v1.Pod) (*PodInfo, error) {
 	if IsTargetPod(pod) {
 		// parse networkStatus
 		statuses, _ = netdefutils.GetNetworkStatus(pod)
-		klog.V(1).Infof("pod:%s/%s %s/%s", pod.Namespace, pod.Name, pct.hostname, pod.Spec.NodeName)
+		klog.V(3).Infof("pod:%s/%s %s/%s", pod.Namespace, pod.Name, pct.hostname, pod.Spec.NodeName)
 		for _, s := range statuses {
 			netifs = append(netifs, InterfaceInfo{
 				NetattachName: s.Name,
@@ -350,12 +350,12 @@ func (pct *PodChangeTracker) newPodInfo(pod *v1.Pod) (*PodInfo, error) {
 			if err != nil {
 				klog.Errorf("failed to get pod(%s/%s) network namespace: %v", pod.Namespace, pod.Name, err)
 			}
-			klog.V(8).Infof("NetnsPath: %s", netnsPath)
+			klog.V(5).Infof("NetnsPath: %s", netnsPath)
 		}
 
-		klog.V(6).Infof("Pod: %s/%s netns:%s netIF:%v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, netnsPath, netifs)
+		klog.V(5).Infof("Pod: %s/%s netns:%s netIF:%v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, netnsPath, netifs)
 	} else {
-		klog.V(1).Infof("Pod:%s/%s %s/%s, not target", pod.Namespace, pod.Name, pct.hostname, pod.Spec.NodeName)
+		klog.V(5).Infof("Pod:%s/%s %s/%s, not target", pod.Namespace, pod.Name, pct.hostname, pod.Spec.NodeName)
 	}
 	info := &PodInfo{
 		Name:          pod.ObjectMeta.Name,

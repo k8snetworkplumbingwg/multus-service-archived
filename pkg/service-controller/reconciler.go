@@ -67,7 +67,7 @@ func (r *reconciler) reconcile(service *corev1.Service, pods []*corev1.Pod, exis
 	// addresses that this service supports [o(1) find]
 	serviceSupportedAddressesTypes := getAddressTypesForService(service)
 
-	if v, ok := service.Labels[labelServiceProxyName]; !ok || v != serviceProxyName {
+	if v, ok := service.Labels[LabelServiceProxyName]; !ok || v != serviceProxyName {
 		return nil
 	}
 

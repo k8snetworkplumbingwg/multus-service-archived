@@ -105,7 +105,8 @@ spec:
         imagePullPolicy: Always
         command: ["/usr/bin/multus-service-controller"]
 #        args:
-#        - "-v=3"
+#        - "--logtostderr"
+#        - "-v=1"
         resources:
           requests:
             cpu: "100m"
@@ -158,7 +159,8 @@ spec:
         - "--container-runtime-endpoint=/run/crio/crio.sock"
         # uncomment this if you want to store iptables rules
         - "--pod-iptables=/var/lib/multus-proxy/iptables"
-#        - "-v=3"
+#        - "--logtostderr"
+#        - "-v=1"
         resources:
           requests:
             cpu: "100m"

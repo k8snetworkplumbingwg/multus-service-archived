@@ -75,7 +75,7 @@ const (
 
 	// LabelServiceProxyName is kube-proxy's well-known label which
 	// avoid to inject iptable rules from kube-proxy
-	labelServiceProxyName = "service.kubernetes.io/service-proxy-name"
+	LabelServiceProxyName = "service.kubernetes.io/service-proxy-name"
 
 	// serviceProxyName specifies which proxy works for the endpointslice
 	serviceProxyName = "multus-proxy"
@@ -344,7 +344,7 @@ func (c *Controller) syncService(key string) error {
 		return nil
 	}
 
-	proxyName, ok := service.Labels[labelServiceProxyName]
+	proxyName, ok := service.Labels[LabelServiceProxyName]
 	if !ok || proxyName != serviceProxyName {
 		return nil
 	}

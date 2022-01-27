@@ -582,7 +582,7 @@ func endpointsMapFromEndpointInfo(endpointInfoBySP map[ServicePortName]map[strin
 			// Ensure endpoints are always returned in the same order to simplify diffing.
 			sort.Sort(byEndpoint(endpointsMap[svcPortName]))
 
-			klog.V(3).Infof("Setting endpoints for %q to %+v", svcPortName, formatEndpointsList(endpointsMap[svcPortName]))
+			klog.V(4).Infof("Setting endpoints for %q to %+v", svcPortName, formatEndpointsList(endpointsMap[svcPortName]))
 		}
 	}
 

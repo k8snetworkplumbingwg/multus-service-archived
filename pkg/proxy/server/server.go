@@ -233,7 +233,7 @@ func NewServer(o *Options) (*Server, error) {
 	}
 
 	//syncPeriod := 30 * time.Second
-	syncPeriod := 5 * time.Second
+	syncPeriod := 30 * time.Second
 	minSyncPeriod := 0 * time.Second
 	burstSyncs := 2
 
@@ -315,7 +315,7 @@ func (s *Server) OnPodDelete(pod *v1.Pod) {
 
 // OnPodSynced ...
 func (s *Server) OnPodSynced() {
-	klog.Infof("OnPodSynced")
+	klog.V(4).Infof("OnPodSynced")
 	s.mu.Lock()
 	s.podSynced = true
 	s.setInitialized(s.podSynced)
@@ -347,7 +347,7 @@ func (s *Server) OnEndpointSliceDelete(endpointSlice *discovery.EndpointSlice) {
 
 // OnEndpointSliceSynced ...
 func (s *Server) OnEndpointSliceSynced() {
-	klog.Infof("OnEndpointSliceSynced")
+	klog.V(4).Infof("OnEndpointSliceSynced")
 	s.mu.Lock()
 	s.endpointsSynced = true
 	s.setInitialized(s.endpointsSynced)
@@ -380,7 +380,7 @@ func (s *Server) OnServiceDelete(service *v1.Service) {
 
 // OnServiceSynced ...
 func (s *Server) OnServiceSynced() {
-	klog.Infof("OnServiceSynced")
+	klog.V(4).Infof("OnServiceSynced")
 	s.mu.Lock()
 	s.serviceSynced = true
 	s.setInitialized(s.serviceSynced)
@@ -408,24 +408,24 @@ func (s *Server) syncServiceForwarding() {
 	}
 
 	for _, p := range pods {
+		klog.V(5).Infof("SYNC %s/%s", p.Namespace, p.Name)
 		if !controllers.IsTargetPod(p) {
-			klog.V(8).Infof("SKIP SYNC (not active) %s/%s", p.Namespace, p.Name)
+			klog.V(5).Infof("SKIP SYNC (not active) %s/%s", p.Namespace, p.Name)
 			continue
 		}
 		if !proxyutils.CheckNodeNameIdentical(s.Hostname, p.Spec.NodeName) {
-			klog.V(8).Infof("SKIP SYNC (not host) %s/%s", p.Namespace, p.Name)
+			klog.V(5).Infof("SKIP SYNC (not host) %s/%s", p.Namespace, p.Name)
 			continue
 		}
 
-		klog.V(8).Infof("SYNC %s/%s", p.Namespace, p.Name)
 		podInfo, err := s.podMap.GetPodInfo(p)
 		if err != nil {
 			klog.Errorf("cannot get %s/%s podInfo: %v", p.Namespace, p.Name, err)
 			continue
 		}
 
-		if len(podInfo.Interfaces) == 0 {
-			klog.V(8).Infof("skipped due to no interfaces")
+		if len(podInfo.Interfaces) < 2 {
+			klog.V(5).Infof("SKIP SYNC (no multus interfaces) %s/%s", p.Namespace, p.Name)
 			continue
 		}
 		netnsPath := podInfo.NetNSPath
@@ -438,7 +438,7 @@ func (s *Server) syncServiceForwarding() {
 			klog.Errorf("cannot get netns %v(%v): %v", netnsPath, netns, err)
 			continue
 		}
-		klog.V(8).Infof("pod: %s/%s %s", p.Namespace, p.Name, netnsPath)
+		klog.V(4).Infof("pod: %s/%s %s", p.Namespace, p.Name, netnsPath)
 
 		_ = netns.Do(func(_ ns.NetNS) error {
 			err := s.generateServiceForwardingRules(services, p, podInfo)
@@ -459,8 +459,7 @@ func servicePortEndpointChainName(servicePortName string, protocol string, endpo
 }
 
 func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.Pod, podInfo *controllers.PodInfo) error {
-	klog.Infof("Generate rules for Pod :%v/%v\n", podInfo.Namespace, podInfo.Name)
-	klog.V(8).Infof("Generate rules for Pod :%v/%v\n", podInfo.Namespace, podInfo.Name)
+	klog.V(4).Infof("Generate rules for Pod :%v/%v\n", podInfo.Namespace, podInfo.Name)
 	s.ip4Tables.EnsureChain(utiliptables.TableNAT, serviceChain)
 
 	_, err := s.ip4Tables.EnsureRule(utiliptables.Prepend, utiliptables.TableNAT,
@@ -511,7 +510,7 @@ func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.
 	}
 
 	if len(iptableBuffer.NewClusterIPs) != 0 {
-		fmt.Fprintf(os.Stderr, "XXX ClusterIP (added): %v\n", iptableBuffer.NewClusterIPs)
+		klog.V(4).Infof("new clusterIP: %v\n", iptableBuffer.NewClusterIPs)
 		for _, v := range iptableBuffer.NewClusterIPs {
 			_, dst, err := net.ParseCIDR(v.ClusterIP)
 			if err != nil {

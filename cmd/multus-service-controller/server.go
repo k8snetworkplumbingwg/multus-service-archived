@@ -25,6 +25,8 @@ import (
 	"github.com/k8snetworkplumbingwg/multus-service/pkg/service-controller"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
@@ -111,17 +113,29 @@ func NewServer(o *Options) (*endpointslice.Controller, clientset.Interface, erro
 		return nil, client, err
 	}
 
-	syncPeriod := 30 * time.Second
+	syncPeriod := 5 * time.Second
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(client, syncPeriod)
+
+	proxyName, err := labels.NewRequirement(endpointslice.LabelServiceProxyName, selection.Equals, []string{"multus-proxy"})
+	if err != nil {
+		return nil, client, err
+	}
+	labelSelector := labels.NewSelector()
+	labelSelector = labelSelector.Add(*proxyName)
+	svcInformerFactory := informers.NewSharedInformerFactoryWithOptions(client, syncPeriod,
+	informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+		options.LabelSelector = labelSelector.String()
+        }))
 
 	controller := endpointslice.NewController(
 		informerFactory.Core().V1().Pods(),
-		informerFactory.Core().V1().Services(),
+		svcInformerFactory.Core().V1().Services(),
 		informerFactory.Core().V1().Nodes(),
 		informerFactory.Discovery().V1().EndpointSlices(),
 		100, //maxEndpointsPerSlice
 		client, syncPeriod)
 	informerFactory.Start(wait.NeverStop)
+	svcInformerFactory.Start(wait.NeverStop)
 
 	return controller, client, nil
 }
