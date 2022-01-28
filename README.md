@@ -28,7 +28,10 @@ Currently amd64 only.
 
 ## How to Deploy
 
-Sample deployment is in [deploy.yml](https://github.com/k8snetworkplumbingwg/multus-service/blob/main/deploy.yml).
+Sample deployment is in following:
+
+- [deploy.yml](https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-service/main/deploy.yml), for iptables-legacy users
+- [deploy-nft.yml](https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-service/main/deploy-nft.yml), for iptalbes-nft users
 
 
 ## TODO
