@@ -20,6 +20,15 @@ Currently these compoents supports following functionalities:
 
 Other service related features is to be discussed in [Kubernetes Network Plumbing WG](https://github.com/k8snetworkplumbingwg/community). Some of them might be supported in the future but this does not guarantee that all Kubernetes service features are going to be supported.
 
+### Limitation
+
+TBD
+
+
+## Requirements
+
+TBD (verified with kubeadm k8s and cri-o as container runtime for now)
+
 
 ## Container Images
 
@@ -32,7 +41,6 @@ Sample deployment is in following:
 
 - [deploy.yml](https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-service/main/deploy.yml), for iptables-legacy users
 - [deploy-nft.yml](https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-service/main/deploy-nft.yml), for iptalbes-nft users
-
 
 ## TODO
 
