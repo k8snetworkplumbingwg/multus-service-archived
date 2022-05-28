@@ -152,8 +152,6 @@ spec:
         command: ["/usr/bin/multus-proxy"]
         args:
         - "--host-prefix=/host"
-        # uncomment this if runtime is docker
-        #- "--container-runtime=docker"
         - "--container-runtime=cri"
         # change this if runtime is different that crio default
         - "--container-runtime-endpoint=/run/crio/crio.sock"

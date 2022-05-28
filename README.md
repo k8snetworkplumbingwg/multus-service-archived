@@ -28,6 +28,7 @@ TBD
 ## Requirements
 
 TBD (verified with kubeadm k8s and cri-o as container runtime for now)
+Note: docker for container runtime is not supported as latest Kubernetes does.
 
 
 ## Container Images
