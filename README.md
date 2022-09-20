@@ -22,7 +22,13 @@ Other service related features is to be discussed in [Kubernetes Network Plumbin
 
 ### Limitation
 
-TBD
+As noted above section, we do not support everything except above yet. We need to discuss how to implement and how to support it. Please keep in mind that these feature should be discussed but it may be concluded NOT to support (due to multus network design perspective or some other reason).
+
+Example (not support it yet):
+
+- Load balancer
+- Expose multus service to outside cluster
+- `kubectl port-forward svc` command
 
 
 ## Requirements
