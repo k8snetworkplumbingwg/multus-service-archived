@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -81,6 +82,10 @@ type Server struct {
 	ip4Tables        utiliptables.Interface
 	ip6Tables        utiliptables.Interface
 	iptableBuffer    iptableBuffer
+
+	// for host network configration
+	//hostNetworkConfig []hostNetworkConfigration
+	hostNetworkConfig []controllers.InterfaceInfo
 
 	// Since converting probabilities (floats) to strings is expensive
 	// and we are using only probabilities in the format of 1/n, we are
@@ -206,6 +211,44 @@ func NewServer(o *Options) (*Server, error) {
 		return nil, err
 	}
 
+	//parse host-network option
+	hostNetConfigList := []controllers.InterfaceInfo{}
+	if o.hostNetwork != "" {
+		for _, hostNet := range strings.Split(o.hostNetwork, ",") {
+			netStr := strings.Split(hostNet, ":")
+			if len(netStr) !=2 {
+				return nil, fmt.Errorf("host-network: %s is invalid", hostNet)
+			}
+			hostNetConfig := controllers.InterfaceInfo{}
+			hostNetConfig.InterfaceName = netStr[1]
+
+			link, err := netlink.LinkByName(hostNetConfig.InterfaceName)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get host interface: %v", err)
+			}
+			addrs, err := netlink.AddrList(link, netlink.FAMILY_V4)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get host interface IPs: %v", err)
+			}
+
+			hostNetConfig.IPs = []string{}
+			for _, v := range addrs {
+				hostNetConfig.IPs = append(hostNetConfig.IPs, string(v.IP))
+			}
+
+			if strings.Index(netStr[0], "/") == -1 {
+				hostNetConfig.NetattachName = fmt.Sprintf("default/%s", netStr[0])
+			} else {
+				hostNetConfig.NetattachName = netStr[0]
+			}
+			klog.Infof("host-network configured: %v", hostNetConfig)
+			hostNetConfigList = append(hostNetConfigList, hostNetConfig)
+		}
+	} else {
+		hostNetConfigList = nil
+	}
+	klog.Infof("host-network configured: %v", hostNetConfigList)
+
 	if o.podIptables != "" {
 		// cleanup current pod iptables directory if it exists
 		if _, err := os.Stat(o.podIptables); err == nil || !os.IsNotExist(err) {
@@ -266,6 +309,7 @@ func NewServer(o *Options) (*Server, error) {
 		Client:           client,
 		Hostname:         hostname,
 		hostPrefix:       o.hostPrefix,
+		hostNetworkConfig: hostNetConfigList,
 		Broadcaster:      eventBroadcaster,
 		Recorder:         recorder,
 		ConfigSyncPeriod: 15 * time.Minute,
@@ -458,6 +502,12 @@ func (s *Server) syncServiceForwarding() {
 			return err
 		})
 	}
+
+	if s.hostNetworkConfig != nil {
+		//XXX: need to check err
+		_ = s.generateServiceForwardingRules(services, nil, nil)
+		s.backupIptablesRules(nil, "current-service")
+	}
 }
 
 const (
@@ -471,7 +521,11 @@ func servicePortEndpointChainName(servicePortName string, protocol string, endpo
 }
 
 func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.Pod, podInfo *controllers.PodInfo) error {
-	klog.V(4).Infof("Generate rules for Pod :%v/%v\n", podInfo.Namespace, podInfo.Name)
+	if podInfo == nil {
+		klog.V(4).Infof("Generate rules for host")
+	} else {
+		klog.V(4).Infof("Generate rules for Pod :%v/%v", podInfo.Namespace, podInfo.Name)
+	}
 	s.ip4Tables.EnsureChain(utiliptables.TableNAT, serviceChain)
 
 	_, err := s.ip4Tables.EnsureRule(utiliptables.Prepend, utiliptables.TableNAT,
@@ -485,9 +539,15 @@ func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.
 	iptableBuffer := newIptableBuffer()
 	iptableBuffer.Init(s.ip4Tables)
 
-	for _, status := range podInfo.NetworkStatus {
+	var interfaceList []controllers.InterfaceInfo
+	if pod == nil {
+		interfaceList = s.hostNetworkConfig
+	} else {
+		interfaceList = podInfo.Interfaces
+	}
+	for _, status := range interfaceList {
 		for svcPortName, svcInfo := range s.serviceMap {
-			if status.Name == svcInfo.TargetNetwork && svcInfo.ClusterIP != "None" {
+			if status.NetattachName == svcInfo.TargetNetwork && svcInfo.ClusterIP != "None" {
 				_ = iptableBuffer.generateServicePortForwardingRules(s, &svcPortName, &svcInfo, &status)
 			}
 		}
@@ -496,7 +556,12 @@ func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.
 	if iptableBuffer.FinalizeRules() == true {
 		/* store generated iptables rules if podIptables is enabled */
 		if s.Options.podIptables != "" {
-			filePath := fmt.Sprintf("%s/%s/multus_service.iptables", s.Options.podIptables, pod.UID)
+			var filePath string
+			if pod == nil {
+				filePath = fmt.Sprintf("%s/host/multus_service.iptables", s.Options.podIptables)
+			} else {
+				filePath = fmt.Sprintf("%s/%s/multus_service.iptables", s.Options.podIptables, pod.UID)
+			}
 			iptableBuffer.SaveRules(filePath)
 		}
 		if err := iptableBuffer.SyncRules(s.ip4Tables); err != nil {
@@ -522,7 +587,7 @@ func (s *Server) generateServiceForwardingRules(services []*v1.Service, pod *v1.
 	}
 
 	if len(iptableBuffer.NewClusterIPs) != 0 {
-		klog.V(4).Infof("new clusterIP: %v\n", iptableBuffer.NewClusterIPs)
+		klog.V(4).Infof("new clusterIP: %v", iptableBuffer.NewClusterIPs)
 		for _, v := range iptableBuffer.NewClusterIPs {
 			_, dst, err := net.ParseCIDR(v.ClusterIP)
 			if err != nil {
@@ -549,16 +614,21 @@ func (s *Server) backupIptablesRules(pod *v1.Pod, suffix string) error {
 		return nil
 	}
 
-	podIptables := fmt.Sprintf("%s/%s", s.Options.podIptables, pod.UID)
+	var iptablesPath string
+	if pod == nil {
+		iptablesPath = fmt.Sprintf("%s/host", s.Options.podIptables)
+	} else {
+		iptablesPath = fmt.Sprintf("%s/%s", s.Options.podIptables, pod.UID)
+	}
 	// create directory for pod if not exist
-	if _, err := os.Stat(podIptables); os.IsNotExist(err) {
-		err := os.Mkdir(podIptables, 0700)
+	if _, err := os.Stat(iptablesPath); os.IsNotExist(err) {
+		err := os.Mkdir(iptablesPath, 0700)
 		if err != nil {
-			klog.Errorf("cannot create pod dir (%s): %v", podIptables, err)
+			klog.Errorf("cannot create pod dir (%s): %v", iptablesPath, err)
 			return err
 		}
 	}
-	file, err := os.Create(fmt.Sprintf("%s/%s.iptables", podIptables, suffix))
+	file, err := os.Create(fmt.Sprintf("%s/%s.iptables", iptablesPath, suffix))
 	defer file.Close()
 	var buffer bytes.Buffer
 

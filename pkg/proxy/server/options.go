@@ -37,6 +37,7 @@ type Options struct {
 	containerRuntime         controllers.RuntimeKind
 	containerRuntimeEndpoint string
 	podIptables              string
+	hostNetwork              string
 	// errCh is the channel that errors will be sent
 	errCh chan error
 	// stopCh is used to stop the command
@@ -48,12 +49,14 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	klog.InitFlags(nil)
 	fs.SortFlags = false
 	fs.Var(&o.containerRuntime, "container-runtime", "Container runtime using for the cluster. Possible values: 'cri'. ")
-	fs.StringVar(&o.containerRuntimeEndpoint, "container-runtime-endpoint", o.containerRuntimeEndpoint, "Path to cri socket.")
-	fs.StringVar(&o.Kubeconfig, "kubeconfig", o.Kubeconfig, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
-	fs.StringVar(&o.master, "master", o.master, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
-	fs.StringVar(&o.hostnameOverride, "hostname-override", o.hostnameOverride, "If non-empty, will use this string as identification instead of the actual hostname.")
-	fs.StringVar(&o.hostPrefix, "host-prefix", o.hostPrefix, "If non-empty, will use this string as prefix for host filesystem.")
-	fs.StringVar(&o.podIptables, "pod-iptables", o.podIptables, "If non-empty, will use this path to store pod's iptables for troubleshooting helper.")
+	fs.StringVar(&o.containerRuntimeEndpoint, "container-runtime-endpoint", "", "Path to cri socket.")
+	fs.StringVar(&o.hostnameOverride, "hostname-override", "", "If non-empty, will use this string as identification instead of the actual hostname.")
+	//example: ./multus-proxy --host-network namespace/net-attach-def:eth1
+	fs.StringVar(&o.hostNetwork, "host-network", "", "If non-empty, configure iptable rules in host network namespace (arg: <net-attach-def>:<interface>).")
+	fs.StringVar(&o.hostPrefix, "host-prefix", "", "If non-empty, will use this string as prefix for host filesystem.")
+	fs.StringVar(&o.Kubeconfig, "kubeconfig", "", "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
+	fs.StringVar(&o.master, "master", "", "The address of the Kubernetes API server (overrides any value in kubeconfig)")
+	fs.StringVar(&o.podIptables, "pod-iptables", "", "If non-empty, will use this path to store pod's iptables for troubleshooting helper.")
 	fs.AddGoFlagSet(flag.CommandLine)
 }
 
