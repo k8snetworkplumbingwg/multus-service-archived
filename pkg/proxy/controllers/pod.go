@@ -25,7 +25,6 @@ import (
 	"sync"
 	"time"
 
-	docker "github.com/docker/docker/client"
 	multiutils "github.com/k8snetworkplumbingwg/multus-service/pkg/proxy/utils"
 	netdefv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	netdefutils "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/utils"
@@ -48,19 +47,17 @@ type RuntimeKind string
 const (
 	// Cri based runtime (e.g. cri-o)
 	Cri = "cri"
-	// Docker based runtime (will be deprecated)
-	Docker = "docker"
 )
 
 // Set specifies container runtime kind
 func (rk *RuntimeKind) Set(s string) error {
 	runtime := strings.ToLower(s)
 	switch runtime {
-	case Cri, Docker:
+	case Cri:
 		*rk = RuntimeKind(runtime)
 		return nil
 	}
-	return fmt.Errorf("Invalid container-runtime option %s (possible values: \"docker\", \"cri\")", s)
+	return fmt.Errorf("Invalid container-runtime option %s (possible values: \"cri\")", s)
 }
 
 // String returns current runtime kind
@@ -244,9 +241,6 @@ type PodChangeTracker struct {
 	// for cri
 	criClient pb.RuntimeServiceClient
 	criConn   *grpc.ClientConn
-
-	// for docker
-	dockerClient *docker.Client
 }
 
 // String
@@ -271,20 +265,6 @@ func (pct *PodChangeTracker) getPodNetNSPath(pod *v1.Pod) (string, error) {
 	runtimeKind := containerURI[0]
 	containerID := containerURI[1]
 	switch runtimeKind {
-	case Docker:
-		if pct.dockerClient == nil {
-			return "", fmt.Errorf("cannot find docker client")
-		}
-		if len(containerID) > 0 {
-			json, err := pct.dockerClient.ContainerInspect(context.TODO(), containerID)
-			if err != nil {
-				return "", fmt.Errorf("failed to get container info: %v", err)
-			}
-			if json.NetworkSettings == nil {
-				return "", fmt.Errorf("failed to get container info: %v", err)
-			}
-			netnsPath = fmt.Sprintf("%s/proc/%d/ns/net", procPrefix, json.State.Pid)
-		}
 	default:
 		if pct.criConn == nil {
 			return "", fmt.Errorf("cannot find cri client")
@@ -373,8 +353,6 @@ func NewPodChangeTracker(runtime RuntimeKind, runtimeEndpoint, hostname, hostPre
 	switch runtime {
 	case Cri:
 		return NewPodChangeTrackerCri(runtimeEndpoint, hostname, hostPrefix)
-	case Docker:
-		return NewPodChangeTrackerDocker(hostname, hostPrefix)
 	default:
 		klog.Errorf("unknown container runtime: %v", runtime)
 		return nil
@@ -394,22 +372,6 @@ func NewPodChangeTrackerCri(runtimeEndpoint, hostname, hostPrefix string) *PodCh
 		hostname:  hostname,
 		criClient: criClient,
 		criConn:   criConn,
-	}
-}
-
-// NewPodChangeTrackerDocker ...
-func NewPodChangeTrackerDocker(hostname, hostPrefix string) *PodChangeTracker {
-	cli, err := docker.NewEnvClient()
-
-	if err != nil {
-		panic(err)
-	}
-	cli.NegotiateAPIVersion(context.TODO())
-
-	return &PodChangeTracker{
-		items:        make(map[types.NamespacedName]*podChange),
-		hostname:     hostname,
-		dockerClient: cli,
 	}
 }
 
