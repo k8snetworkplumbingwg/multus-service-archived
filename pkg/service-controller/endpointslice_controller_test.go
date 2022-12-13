@@ -413,8 +413,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: nil,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.1" ],
@@ -449,8 +448,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: nil,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.2" ],
@@ -521,111 +519,111 @@ func TestSyncService(t *testing.T) {
 			},
 		},
 		/*
-		{
-			name: "pods with multiple IPs and Service with ipFamilies=ipv6",
-			service: &v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "foobar",
-					Namespace:         "default",
-					CreationTimestamp: creationTimestamp,
-				},
-				Spec: v1.ServiceSpec{
-					Ports: []v1.ServicePort{
-						{Name: "tcp-example", TargetPort: intstr.FromInt(80), Protocol: v1.ProtocolTCP},
-						{Name: "udp-example", TargetPort: intstr.FromInt(161), Protocol: v1.ProtocolUDP},
-						{Name: "sctp-example", TargetPort: intstr.FromInt(3456), Protocol: v1.ProtocolSCTP},
-					},
-					Selector:   map[string]string{"foo": "bar"},
-					IPFamilies: []v1.IPFamily{v1.IPv6Protocol},
-				},
-			},
-			pods: []*v1.Pod{
-				{
+			{
+				name: "pods with multiple IPs and Service with ipFamilies=ipv6",
+				service: &v1.Service{
 					ObjectMeta: metav1.ObjectMeta{
+						Name:              "foobar",
 						Namespace:         "default",
-						Name:              "pod0",
-						Labels:            map[string]string{"foo": "bar"},
-						DeletionTimestamp: nil,
+						CreationTimestamp: creationTimestamp,
 					},
-					Spec: v1.PodSpec{
-						Containers: []v1.Container{{
-							Name: "container-1",
-						}},
-						NodeName: "node-1",
+					Spec: v1.ServiceSpec{
+						Ports: []v1.ServicePort{
+							{Name: "tcp-example", TargetPort: intstr.FromInt(80), Protocol: v1.ProtocolTCP},
+							{Name: "udp-example", TargetPort: intstr.FromInt(161), Protocol: v1.ProtocolUDP},
+							{Name: "sctp-example", TargetPort: intstr.FromInt(3456), Protocol: v1.ProtocolSCTP},
+						},
+						Selector:   map[string]string{"foo": "bar"},
+						IPFamilies: []v1.IPFamily{v1.IPv6Protocol},
 					},
-					Status: v1.PodStatus{
-						PodIP: "10.0.0.1",
-						PodIPs: []v1.PodIP{{
-							IP: "10.0.0.1",
-						}},
-						Conditions: []v1.PodCondition{
-							{
-								Type:   v1.PodReady,
-								Status: v1.ConditionTrue,
+				},
+				pods: []*v1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace:         "default",
+							Name:              "pod0",
+							Labels:            map[string]string{"foo": "bar"},
+							DeletionTimestamp: nil,
+						},
+						Spec: v1.PodSpec{
+							Containers: []v1.Container{{
+								Name: "container-1",
+							}},
+							NodeName: "node-1",
+						},
+						Status: v1.PodStatus{
+							PodIP: "10.0.0.1",
+							PodIPs: []v1.PodIP{{
+								IP: "10.0.0.1",
+							}},
+							Conditions: []v1.PodCondition{
+								{
+									Type:   v1.PodReady,
+									Status: v1.ConditionTrue,
+								},
+							},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace:         "default",
+							Name:              "pod1",
+							Labels:            map[string]string{"foo": "bar"},
+							DeletionTimestamp: nil,
+						},
+						Spec: v1.PodSpec{
+							Containers: []v1.Container{{
+								Name: "container-1",
+							}},
+							NodeName: "node-1",
+						},
+						Status: v1.PodStatus{
+							PodIP: "10.0.0.2",
+							PodIPs: []v1.PodIP{
+								{
+									IP: "10.0.0.2",
+								},
+								{
+									IP: "fd08::5678:0000:0000:9abc:def0",
+								},
+							},
+							Conditions: []v1.PodCondition{
+								{
+									Type:   v1.PodReady,
+									Status: v1.ConditionTrue,
+								},
 							},
 						},
 					},
 				},
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace:         "default",
-						Name:              "pod1",
-						Labels:            map[string]string{"foo": "bar"},
-						DeletionTimestamp: nil,
+				expectedEndpointPorts: []discovery.EndpointPort{
+					{
+						Name:     utilpointer.StringPtr("sctp-example"),
+						Protocol: protoPtr(v1.ProtocolSCTP),
+						Port:     utilpointer.Int32Ptr(int32(3456)),
 					},
-					Spec: v1.PodSpec{
-						Containers: []v1.Container{{
-							Name: "container-1",
-						}},
-						NodeName: "node-1",
+					{
+						Name:     utilpointer.StringPtr("udp-example"),
+						Protocol: protoPtr(v1.ProtocolUDP),
+						Port:     utilpointer.Int32Ptr(int32(161)),
 					},
-					Status: v1.PodStatus{
-						PodIP: "10.0.0.2",
-						PodIPs: []v1.PodIP{
-							{
-								IP: "10.0.0.2",
-							},
-							{
-								IP: "fd08::5678:0000:0000:9abc:def0",
-							},
+					{
+						Name:     utilpointer.StringPtr("tcp-example"),
+						Protocol: protoPtr(v1.ProtocolTCP),
+						Port:     utilpointer.Int32Ptr(int32(80)),
+					},
+				},
+				expectedEndpoints: []discovery.Endpoint{
+					{
+						Conditions: discovery.EndpointConditions{
+							Ready: utilpointer.BoolPtr(true),
 						},
-						Conditions: []v1.PodCondition{
-							{
-								Type:   v1.PodReady,
-								Status: v1.ConditionTrue,
-							},
-						},
+						Addresses: []string{"fd08::5678:0000:0000:9abc:def0"},
+						TargetRef: &v1.ObjectReference{Kind: "Pod", Namespace: "default", Name: "pod1"},
+						NodeName:  utilpointer.StringPtr("node-1"),
 					},
 				},
 			},
-			expectedEndpointPorts: []discovery.EndpointPort{
-				{
-					Name:     utilpointer.StringPtr("sctp-example"),
-					Protocol: protoPtr(v1.ProtocolSCTP),
-					Port:     utilpointer.Int32Ptr(int32(3456)),
-				},
-				{
-					Name:     utilpointer.StringPtr("udp-example"),
-					Protocol: protoPtr(v1.ProtocolUDP),
-					Port:     utilpointer.Int32Ptr(int32(161)),
-				},
-				{
-					Name:     utilpointer.StringPtr("tcp-example"),
-					Protocol: protoPtr(v1.ProtocolTCP),
-					Port:     utilpointer.Int32Ptr(int32(80)),
-				},
-			},
-			expectedEndpoints: []discovery.Endpoint{
-				{
-					Conditions: discovery.EndpointConditions{
-						Ready: utilpointer.BoolPtr(true),
-					},
-					Addresses: []string{"fd08::5678:0000:0000:9abc:def0"},
-					TargetRef: &v1.ObjectReference{Kind: "Pod", Namespace: "default", Name: "pod1"},
-					NodeName:  utilpointer.StringPtr("node-1"),
-				},
-			},
-		},
 		*/
 		{
 			name: "Terminating pods with EndpointSliceTerminatingCondition enabled",
@@ -660,8 +658,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: nil,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.1" ],
@@ -696,8 +693,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: &deletionTimestamp,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.2" ],
@@ -802,8 +798,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: nil,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.1" ],
@@ -838,8 +833,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: &deletionTimestamp,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.1" ],
@@ -932,8 +926,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: nil,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.1" ],
@@ -968,8 +961,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: &deletionTimestamp,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.2" ],
@@ -1074,8 +1066,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: nil,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.1" ],
@@ -1110,8 +1101,7 @@ func TestSyncService(t *testing.T) {
 						Labels:            map[string]string{"foo": "bar"},
 						DeletionTimestamp: &deletionTimestamp,
 						Annotations: map[string]string{
-							netdefv1.NetworkStatusAnnot:
-							`[{
+							netdefv1.NetworkStatusAnnot: `[{
 								"name": "default/testnet1",
 								"interface": "net1",
 								"ips": [ "10.1.1.2" ],

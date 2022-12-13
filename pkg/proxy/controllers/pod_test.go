@@ -259,13 +259,11 @@ var _ = Describe("pod controller", func() {
 var _ = Describe("runtime kind", func() {
 	It("Check container runtime valid case", func() {
 		var runtime RuntimeKind
-		Expect(runtime.Set("docker")).To(BeNil())
-		Expect(runtime.Set("Docker")).To(BeNil())
 		Expect(runtime.Set("cri")).To(BeNil())
 		Expect(runtime.Set("CRI")).To(BeNil())
 	})
 	It("Check container runtime option invalid case", func() {
 		var runtime RuntimeKind
-		Expect(runtime.Set("Foobar")).To(MatchError("Invalid container-runtime option Foobar (possible values: \"docker\", \"cri\")"))
+		Expect(runtime.Set("Foobar")).To(MatchError("Invalid container-runtime option Foobar (possible values: \"cri\")"))
 	})
 })

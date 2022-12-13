@@ -961,7 +961,7 @@ func newPod(n int, namespace string, ready bool, nPorts int, terminating bool) *
           ],
           "mac": "86:0f:b8:11:fb:%d",
           "dns": {}
-}]` , namespace, n, n),
+}]`, namespace, n, n),
 			},
 		},
 		Spec: v1.PodSpec{

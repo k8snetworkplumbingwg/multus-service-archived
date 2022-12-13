@@ -82,13 +82,13 @@ func TestReconcile1Pod(t *testing.T) {
 	svcv4ClusterIP, _ := newServiceAndEndpointMeta("foo", namespace)
 	svcv4ClusterIP.Spec.ClusterIP = "1.1.1.1"
 	svcv4Labels, _ := newServiceAndEndpointMeta("foo", namespace)
-	svcv4Labels.Labels = map[string]string{"foo": "bar", "service.kubernetes.io/service-proxy-name": "multus-proxy",}
-	svcv4Labels.Annotations = map[string]string{"k8s.v1.cni.cncf.io/service-network": "testnet1",}
+	svcv4Labels.Labels = map[string]string{"foo": "bar", "service.kubernetes.io/service-proxy-name": "multus-proxy"}
+	svcv4Labels.Annotations = map[string]string{"k8s.v1.cni.cncf.io/service-network": "testnet1"}
 
 	svcv4BadLabels, _ := newServiceAndEndpointMeta("foo", namespace)
 	svcv4BadLabels.Labels = map[string]string{discovery.LabelServiceName: "bad",
 		discovery.LabelManagedBy: "actor", corev1.IsHeadlessService: "invalid",
-		"service.kubernetes.io/service-proxy-name": "multus-proxy",}
+		"service.kubernetes.io/service-proxy-name": "multus-proxy"}
 	svcv6, _ := newServiceAndEndpointMeta("foo", namespace)
 	svcv6.Spec.IPFamilies = []corev1.IPFamily{corev1.IPv6Protocol}
 	svcv6ClusterIP, _ := newServiceAndEndpointMeta("foo", namespace)
@@ -141,8 +141,8 @@ func TestReconcile1Pod(t *testing.T) {
 				},
 			},
 			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
+				discovery.LabelManagedBy:                   controllerName,
+				discovery.LabelServiceName:                 "foo",
 				"service.kubernetes.io/service-proxy-name": "multus-proxy",
 			},
 		},
@@ -164,9 +164,9 @@ func TestReconcile1Pod(t *testing.T) {
 				},
 			},
 			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
-				corev1.IsHeadlessService:   "",
+				discovery.LabelManagedBy:                   controllerName,
+				discovery.LabelServiceName:                 "foo",
+				corev1.IsHeadlessService:                   "",
 				"service.kubernetes.io/service-proxy-name": "multus-proxy",
 			},
 		},
@@ -192,9 +192,9 @@ func TestReconcile1Pod(t *testing.T) {
 				},
 			},
 			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
-				corev1.IsHeadlessService:   "",
+				discovery.LabelManagedBy:                   controllerName,
+				discovery.LabelServiceName:                 "foo",
+				corev1.IsHeadlessService:                   "",
 				"service.kubernetes.io/service-proxy-name": "multus-proxy",
 			},
 			terminatingGateEnabled: true,
@@ -218,8 +218,8 @@ func TestReconcile1Pod(t *testing.T) {
 			},
 			expectedAddressType: discovery.AddressTypeIPv4,
 			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
+				discovery.LabelManagedBy:                   controllerName,
+				discovery.LabelServiceName:                 "foo",
 				"service.kubernetes.io/service-proxy-name": "multus-proxy",
 			},
 		},
@@ -279,97 +279,97 @@ func TestReconcile1Pod(t *testing.T) {
 			},
 			expectedAddressType: discovery.AddressTypeIPv4,
 			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
-				corev1.IsHeadlessService:   "",
+				discovery.LabelManagedBy:                   controllerName,
+				discovery.LabelServiceName:                 "foo",
+				corev1.IsHeadlessService:                   "",
 				"service.kubernetes.io/service-proxy-name": "multus-proxy",
 			},
 		},
 
 		/*
-		"ipv6": {
-			service: svcv6,
-			expectedEndpointPerSlice: map[discovery.AddressType][]discovery.Endpoint{
-				discovery.AddressTypeIPv6: {
-					{
-						Addresses:  []string{"1234::5678:0000:0000:9abc:def0"},
-						Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
-						Zone:       utilpointer.StringPtr("us-central1-a"),
-						NodeName:   utilpointer.StringPtr("node-1"),
-						TargetRef: &corev1.ObjectReference{
-							Kind:      "Pod",
-							Namespace: namespace,
-							Name:      "pod1",
+			"ipv6": {
+				service: svcv6,
+				expectedEndpointPerSlice: map[discovery.AddressType][]discovery.Endpoint{
+					discovery.AddressTypeIPv6: {
+						{
+							Addresses:  []string{"1234::5678:0000:0000:9abc:def0"},
+							Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
+							Zone:       utilpointer.StringPtr("us-central1-a"),
+							NodeName:   utilpointer.StringPtr("node-1"),
+							TargetRef: &corev1.ObjectReference{
+								Kind:      "Pod",
+								Namespace: namespace,
+								Name:      "pod1",
+							},
 						},
 					},
 				},
+				expectedLabels: map[string]string{
+					discovery.LabelManagedBy:   controllerName,
+					discovery.LabelServiceName: "foo",
+					corev1.IsHeadlessService:   "",
+					"service.kubernetes.io/service-proxy-name": "multus-proxy",
+				},
 			},
-			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
-				corev1.IsHeadlessService:   "",
-				"service.kubernetes.io/service-proxy-name": "multus-proxy",
-			},
-		},
 
-		"ipv6-clusterip": {
-			service: svcv6ClusterIP,
-			expectedEndpointPerSlice: map[discovery.AddressType][]discovery.Endpoint{
-				discovery.AddressTypeIPv6: {
-					{
-						Addresses:  []string{"1234::5678:0000:0000:9abc:def0"},
-						Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
-						Zone:       utilpointer.StringPtr("us-central1-a"),
-						NodeName:   utilpointer.StringPtr("node-1"),
-						TargetRef: &corev1.ObjectReference{
-							Kind:      "Pod",
-							Namespace: namespace,
-							Name:      "pod1",
+			"ipv6-clusterip": {
+				service: svcv6ClusterIP,
+				expectedEndpointPerSlice: map[discovery.AddressType][]discovery.Endpoint{
+					discovery.AddressTypeIPv6: {
+						{
+							Addresses:  []string{"1234::5678:0000:0000:9abc:def0"},
+							Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
+							Zone:       utilpointer.StringPtr("us-central1-a"),
+							NodeName:   utilpointer.StringPtr("node-1"),
+							TargetRef: &corev1.ObjectReference{
+								Kind:      "Pod",
+								Namespace: namespace,
+								Name:      "pod1",
+							},
 						},
 					},
 				},
+				expectedLabels: map[string]string{
+					discovery.LabelManagedBy:   controllerName,
+					discovery.LabelServiceName: "foo",
+				},
 			},
-			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
-			},
-		},
 
-		"dualstack-service": {
-			service: dualStackSvc,
-			expectedEndpointPerSlice: map[discovery.AddressType][]discovery.Endpoint{
-				discovery.AddressTypeIPv6: {
-					{
-						Addresses:  []string{"1234::5678:0000:0000:9abc:def0"},
-						Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
-						Zone:       utilpointer.StringPtr("us-central1-a"),
-						NodeName:   utilpointer.StringPtr("node-1"),
-						TargetRef: &corev1.ObjectReference{
-							Kind:      "Pod",
-							Namespace: namespace,
-							Name:      "pod1",
+			"dualstack-service": {
+				service: dualStackSvc,
+				expectedEndpointPerSlice: map[discovery.AddressType][]discovery.Endpoint{
+					discovery.AddressTypeIPv6: {
+						{
+							Addresses:  []string{"1234::5678:0000:0000:9abc:def0"},
+							Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
+							Zone:       utilpointer.StringPtr("us-central1-a"),
+							NodeName:   utilpointer.StringPtr("node-1"),
+							TargetRef: &corev1.ObjectReference{
+								Kind:      "Pod",
+								Namespace: namespace,
+								Name:      "pod1",
+							},
+						},
+					},
+					discovery.AddressTypeIPv4: {
+						{
+							Addresses:  []string{"1.2.3.4"},
+							Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
+							Zone:       utilpointer.StringPtr("us-central1-a"),
+							NodeName:   utilpointer.StringPtr("node-1"),
+							TargetRef: &corev1.ObjectReference{
+								Kind:      "Pod",
+								Namespace: namespace,
+								Name:      "pod1",
+							},
 						},
 					},
 				},
-				discovery.AddressTypeIPv4: {
-					{
-						Addresses:  []string{"1.2.3.4"},
-						Conditions: discovery.EndpointConditions{Ready: utilpointer.BoolPtr(true)},
-						Zone:       utilpointer.StringPtr("us-central1-a"),
-						NodeName:   utilpointer.StringPtr("node-1"),
-						TargetRef: &corev1.ObjectReference{
-							Kind:      "Pod",
-							Namespace: namespace,
-							Name:      "pod1",
-						},
-					},
+				expectedLabels: map[string]string{
+					discovery.LabelManagedBy:   controllerName,
+					discovery.LabelServiceName: "foo",
 				},
 			},
-			expectedLabels: map[string]string{
-				discovery.LabelManagedBy:   controllerName,
-				discovery.LabelServiceName: "foo",
-			},
-		},
 		*/
 	}
 
@@ -1013,7 +1013,7 @@ func TestReconcileEndpointSlicesNamedPorts(t *testing.T) {
 
 	svc := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "named-port-example",
+			Name:      "named-port-example",
 			Namespace: namespace,
 			Labels: map[string]string{
 				"service.kubernetes.io/service-proxy-name": "multus-proxy",
@@ -1795,12 +1795,12 @@ func expectMetrics(t *testing.T, em expectedMetrics) {
 	}
 
 	/*
-	//need to revisit
-	actualSlicesChangedPerSync, err := testutil.GetHistogramMetricValue(metrics.EndpointSlicesChangedPerSync.WithLabelValues("Disabled"))
-	handleErr(t, err, "slicesChangedPerSync")
-	if actualSlicesChangedPerSync != float64(em.slicesChangedPerSync) {
-		t.Errorf("Expected slicesChangedPerSync to be %d, got %v", em.slicesChangedPerSync, actualSlicesChangedPerSync)
-	}
+		//need to revisit
+		actualSlicesChangedPerSync, err := testutil.GetHistogramMetricValue(metrics.EndpointSlicesChangedPerSync.WithLabelValues("Disabled"))
+		handleErr(t, err, "slicesChangedPerSync")
+		if actualSlicesChangedPerSync != float64(em.slicesChangedPerSync) {
+			t.Errorf("Expected slicesChangedPerSync to be %d, got %v", em.slicesChangedPerSync, actualSlicesChangedPerSync)
+		}
 	*/
 
 	actualSlicesChangedPerSyncTopology, err := testutil.GetHistogramMetricValue(metrics.EndpointSlicesChangedPerSync.WithLabelValues("Auto"))
