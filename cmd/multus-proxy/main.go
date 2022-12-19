@@ -19,6 +19,8 @@ package main
 import (
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/k8snetworkplumbingwg/multus-service/pkg/proxy/server"
@@ -64,7 +66,19 @@ func main() {
 	}
 	opts.AddFlags(cmd.Flags())
 
+	signalCh := make(chan os.Signal, 16)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for sig := range signalCh {
+			klog.Infof("Caught %v, stopping..", sig)
+			opts.Stop()
+		}
+	}()
+
+	klog.Infof("Executing...")
+
 	if err := cmd.Execute(); err != nil {
+		klog.Errorf("Execute failed: %v", err)
 		os.Exit(1)
 	}
 }
