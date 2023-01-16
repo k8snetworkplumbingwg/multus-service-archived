@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// This is a 'multus-proxy'. This generates iptables rules for
+// multus service dataplane.
 package main
 
 import (

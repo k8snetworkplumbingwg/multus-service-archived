@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package endpointslice proides multus-service-controller functions for
+// endpointslice.
 package endpointslice
 
 import (
