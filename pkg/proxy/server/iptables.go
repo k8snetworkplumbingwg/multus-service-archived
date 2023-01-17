@@ -219,13 +219,22 @@ func (ipt *iptableBuffer) generateServiceEndpointSliceForwardingRules(s *Server,
 			"-m", "statistic", "--mode", "random",
 			"--probability", s.probability(totalEndpointSlices), "-j", endpointChainName)
 
-		//-A MULTUS-SEP-ZZZZZ -p tcp -m comment --comment "NAMESPACE/POD:port1"
-		//-m tcp -j DNAT --to-destination <POD IP>
-		writeLine(ipt.sepRules, "-A", endpointChainName,
-			"-p", "tcp",
+		if svcInfo.Protocol != "" {
+			//-A MULTUS-SEP-ZZZZZ -p tcp -m comment --comment "NAMESPACE/POD:port1"
+			//-m tcp -j DNAT --to-destination <POD IP>
+			writeLine(ipt.sepRules, "-A", endpointChainName,
+			"-p", svcInfo.Protocol,
+			"-m", "comment", "--comment", fmt.Sprintf("\"%s\"", svcInfo.Name),
+			"-m", svcInfo.Protocol, "-j", "DNAT", "--to-destination",
+			fmt.Sprintf("%s", endpoint.String()))
+		} else {
+			//-A MULTUS-SEP-ZZZZZ -p tcp -m comment --comment "NAMESPACE/POD:port1"
+			//-m tcp -j DNAT --to-destination <POD IP>
+			writeLine(ipt.sepRules, "-A", endpointChainName,
 			"-m", "comment", "--comment", fmt.Sprintf("\"%s\"", svcInfo.Name),
 			"-m", "tcp", "-j", "DNAT", "--to-destination",
 			fmt.Sprintf("%s", endpoint.String()))
+		}
 		totalEndpointSlices--
 	}
 	return nil
