@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// This is 'multus-service-controller', which creates endpointslice for
+// multus service, from multus interface output and service object.
 package main
 
 import (

@@ -98,13 +98,14 @@ type Server struct {
 	endpointSliceLister discoverylisters.EndpointSliceLister
 
 	syncRunner *async.BoundedFrequencyRunner
+	syncRunnerStopCh chan struct{}
 }
 
 // LabelServiceProxyName specifies Kubernetes label for service proxy
 const LabelServiceProxyName = "service.kubernetes.io/service-proxy-name"
 
 // Run ...
-func (s *Server) Run(hostname string) error {
+func (s *Server) Run(hostname string, stopCh chan struct{}) error {
 	if s.Broadcaster != nil {
 		s.Broadcaster.StartRecordingToSink(
 			&v1core.EventSinkImpl{Interface: s.Client.CoreV1().Events("")})
@@ -152,7 +153,17 @@ func (s *Server) Run(hostname string) error {
 	podInformerFactory.Start(wait.NeverStop)
 
 	s.birthCry()
-	s.SyncLoop()
+	go s.SyncLoop()
+
+	// Wait for stop signal
+	<- stopCh
+
+	// Stop the sync runner loop
+	s.syncRunnerStopCh <- struct{}{}
+
+	// Delete all iptables by running the `syncServiceForwarding` with no service
+	s.serviceMap = nil
+	s.syncServiceForwarding()
 	return nil
 }
 
@@ -175,7 +186,7 @@ func (s *Server) birthCry() {
 
 // SyncLoop ...
 func (s *Server) SyncLoop() {
-	s.syncRunner.Loop(wait.NeverStop)
+	s.syncRunner.Loop(s.syncRunnerStopCh)
 }
 
 // NewServer ...
@@ -272,6 +283,7 @@ func NewServer(o *Options) (*Server, error) {
 	}
 	server.syncRunner = async.NewBoundedFrequencyRunner(
 		"sync-runner", server.syncServiceForwarding, minSyncPeriod, syncPeriod, burstSyncs)
+	server.syncRunnerStopCh = make(chan struct{})
 
 	return server, nil
 }
