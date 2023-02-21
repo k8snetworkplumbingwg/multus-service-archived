@@ -16,4 +16,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: false
-          tags: gchr.io/${{ github.repository }}:latest-amd64
+          tags: ghcr.io/${{ github.repository }}:latest-amd64
