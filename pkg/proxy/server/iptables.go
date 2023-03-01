@@ -30,7 +30,6 @@ import (
 	"github.com/k8snetworkplumbingwg/multus-service/pkg/proxy/controllers"
 	"github.com/vishvananda/netlink"
 
-	netdefv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	"k8s.io/klog"
 	utiliptables "k8s.io/kubernetes/pkg/util/iptables"
 )
@@ -202,7 +201,7 @@ func (ipt *iptableBuffer) CreateNATChain(chainName string) bool {
 	return true
 }
 
-func (ipt *iptableBuffer) generateServiceEndpointSliceForwardingRules(s *Server, svcPortName *controllers.ServicePortName, svcInfo *controllers.ServicePortInfo, status *netdefv1.NetworkStatus) error {
+func (ipt *iptableBuffer) generateServiceEndpointSliceForwardingRules(s *Server, svcPortName *controllers.ServicePortName, svcInfo *controllers.ServicePortInfo, status *controllers.InterfaceInfo) error {
 	endpoints, ok := s.endpointsMap[*svcPortName]
 	if !ok {
 		return fmt.Errorf("not found: %s", svcInfo.Name)
@@ -241,12 +240,12 @@ func (ipt *iptableBuffer) generateServiceEndpointSliceForwardingRules(s *Server,
 	return nil
 }
 
-func (ipt *iptableBuffer) generateServicePortForwardingRules(s *Server, svcPortName *controllers.ServicePortName, svcInfo *controllers.ServicePortInfo, status *netdefv1.NetworkStatus) error {
+func (ipt *iptableBuffer) generateServicePortForwardingRules(s *Server, svcPortName *controllers.ServicePortName, svcInfo *controllers.ServicePortInfo, status *controllers.InterfaceInfo) error {
 
 	clusterIP := fmt.Sprintf("%s/32", svcInfo.ClusterIP)
 	if ipt.CreateNATChain(svcInfo.ChainName) {
 		// This iptables rule is new rule to be added, hence add clusterIP into NewClusterIPs
-		dev, err := netlink.LinkByName(status.Interface)
+		dev, err := netlink.LinkByName(status.InterfaceName)
 		if err != nil {
 			return err
 		}

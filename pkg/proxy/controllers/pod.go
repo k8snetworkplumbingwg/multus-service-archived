@@ -350,6 +350,13 @@ func (pct *PodChangeTracker) newPodInfo(pod *v1.Pod) (*PodInfo, error) {
 
 // NewPodChangeTracker ...
 func NewPodChangeTracker(runtime RuntimeKind, runtimeEndpoint, hostname, hostPrefix string) *PodChangeTracker {
+	if runtimeEndpoint == "" {
+		return &PodChangeTracker{
+			items:     make(map[types.NamespacedName]*podChange),
+			hostname:  hostname,
+		}
+	}
+
 	switch runtime {
 	case Cri:
 		return NewPodChangeTrackerCri(runtimeEndpoint, hostname, hostPrefix)
