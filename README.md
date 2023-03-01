@@ -29,7 +29,7 @@ Example (not support it yet):
 - Load balancer
 - Expose multus service to outside cluster
 - `kubectl port-forward svc` command
-
+- Headless service (see [#22](https://github.com/k8snetworkplumbingwg/multus-service/issues/22) for the detail)
 
 ## Requirements
 
