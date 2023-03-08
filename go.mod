@@ -90,7 +90,7 @@ require (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.5.13
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.8.1
-	golang.org/x/net => golang.org/x/net v0.1.1-0.20221104162952-702349b0e862
+	golang.org/x/net => golang.org/x/net v0.7.0
 	k8s.io/api => k8s.io/api v0.24.4
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.24.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.24.4
