@@ -37,9 +37,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/vishvananda/netlink v1.1.1-0.20201029203352-d40f9887b852
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.5.0
-	golang.org/x/term v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/sys v0.6.0
+	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.40.0
@@ -80,7 +80,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nxadm/tail v1.4.4 // indirect
 	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20220107163113-42d7afdf6368 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
@@ -90,7 +90,7 @@ require (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.5.13
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.8.1
-	golang.org/x/net => golang.org/x/net v0.7.0
+	golang.org/x/net => golang.org/x/net v0.8.0
 	k8s.io/api => k8s.io/api v0.24.4
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.24.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.24.4
